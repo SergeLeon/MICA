@@ -1,10 +1,12 @@
 import queue
 from threading import Thread
+from time import sleep
 
 import vosk
 import sounddevice
 
 from core import Eventer
+from .handler import handle_user_request, get_used_name
 
 VOSK_MODEL_PATH = "vosk-model-small-ru-0.22"
 
@@ -36,22 +38,28 @@ def listening_loop():
             dtype='int16',
             channels=1,
             callback=callback):
-        rec = vosk.KaldiRecognizer(model, samplerate)
+        recognizer = vosk.KaldiRecognizer(model, samplerate)
         successfully_started = True
 
         while running:
             data = data_queue.get()
-            if rec.AcceptWaveform(data):
-                full_text = rec.Result()
-                full_text = full_text[14:-3]
-                print(full_text)
-                if "мика" in full_text:
-                    eventer.call_event("open_video", {"query": "зимнелетнее похождение"})
+            handle_raw_data(data, recognizer)
 
-            else:
-                part_text = rec.PartialResult()
-                part_text = part_text[17:-3]
-                print(part_text)
+
+def handle_raw_data(data, recognizer):
+    if recognizer.AcceptWaveform(data):
+        full_text = recognizer.Result()
+        full_text = full_text[14:-3]
+        print(full_text)
+        name = get_used_name(full_text)
+        if name:
+            print(f"DEBUG: request received {full_text}")
+            handle_user_request(full_text, name)
+
+    else:
+        part_text = recognizer.PartialResult()
+        part_text = part_text[17:-3]
+        print(part_text)
 
 
 def init():
@@ -59,7 +67,7 @@ def init():
         print("WARNING: could not find an available microphone")
         return
 
-    if successfully_started is not None:
+    if successfully_started:
         print("WARNING: listener module already initialized")
         return
 
@@ -74,7 +82,7 @@ def init():
     Thread(target=listening_loop).start()
 
     while successfully_started is None:
-        pass
+        sleep(0.5)
 
     if successfully_started:
         print("INFO: listener module initialized")
@@ -84,16 +92,14 @@ def init():
 
 def stop():
     global running
-    global started
+    global successfully_started
     running = False
-    started = False
+    successfully_started = None
 
     print("INFO: listener module stopped")
 
 
 if __name__ == "__main__":
-    from time import sleep
-
     init()
     sleep(60)
     stop()
