@@ -19,6 +19,13 @@ def handle_user_request(text: str, used_name: str):
     if not request:
         return
 
-    if request.startswith("включи"):
-        search_query = request.replace("включи", "", 1).strip()
+    if "видео" in request:
+        search_query = text.split("видео", 1)[1].strip()
         Eventer.call_event("open_video", {"query": search_query})
+
+    elif "гиф" in request:
+        search_query = text.split("гиф")[1]
+        if not search_query:
+            return
+        search_query = search_query.split(" ", 1)[1]
+        Eventer.call_event("show_gifs", {"query": search_query})

@@ -1,35 +1,85 @@
+from time import sleep
+
+import requests
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common import NoSuchElementException, ElementNotInteractableException
 
 import chromedriver_autoinstaller
 
 from core import Eventer
 
+FULL_SCREEN_BROWSER = True
 FULL_SCREEN_VIDEO = True
 
 driver: webdriver.Chrome
 wait: WebDriverWait
 
+lock = False
+need_to_stop = False
+
+
+def stop_other(func):
+    def _wrapper(*args, **kwargs):
+        global lock
+        global need_to_stop
+        need_to_stop = True
+        while lock:
+            sleep(0.5)
+        need_to_stop = False
+        result = func(*args, **kwargs)
+        return result
+
+    return _wrapper
+
+
+def lock_function(func):
+    def _wrapper(*args, **kwargs):
+        global lock
+        lock = True
+        result = func(*args, **kwargs)
+        lock = False
+        return result
+
+    return _wrapper
+
 
 def get_driver():
     options = webdriver.ChromeOptions()
+    if FULL_SCREEN_BROWSER:
+        options.add_argument("--kiosk")
+        options.add_experimental_option("detach", True)
+
     options.add_argument("--start-maximized")
+    options.add_argument("--hide-scrollbars")
+    options.add_argument("--disable-browser-side-navigation")
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("detach", True)
+
+    options.page_load_strategy = 'eager'
+
+    # options.add_argument("--allow-profiles-outside-user-dir")
+    # options.add_argument("--enable-profile-shortcut-manager")
+    # options.add_argument(f"user-data-dir={Path.cwd() / 'selenium_data'}")
+    # options.add_argument("--profile-directory=Profile 1")
+
+    # options.add_argument('--log-level=3')
+    # options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
     chrome_driver = webdriver.Chrome(options=options)
 
     return chrome_driver
 
 
-def open_first_in_search(params):
+@stop_other
+@lock_function
+def open_first_video_in_search(params):
     query = params["query"]
 
-    driver.get(f'https://www.youtube.com/results?search_query={query}')
+    driver.get(f"https://www.youtube.com/results?search_query={query}")
 
     # open video
     wait.until(
@@ -37,10 +87,10 @@ def open_first_in_search(params):
     ).click()
 
     if FULL_SCREEN_VIDEO:
-        full_screen_current_page()
+        full_screen_current_video()
 
 
-def full_screen_current_page():
+def full_screen_current_video():
     ActionChains(driver).move_to_element(
         wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "div.ytp-chrome-controls"))
@@ -52,9 +102,44 @@ def full_screen_current_page():
     ).click()
 
 
+@stop_other
+@lock_function
 def open_link(params):
     url = params["url"]
     driver.get(url)
+
+
+@stop_other
+@lock_function
+def show_gifs(params, timeout=5):
+    query = params["query"]
+    gif_links = get_gif_links(query)
+
+    for gif_link in gif_links:
+        if need_to_stop:
+            return
+
+        driver.get(f"{gif_link}/tile")
+        sleep(timeout)
+        try:
+            driver.find_element(By.ID, "didomi-notice-agree-button").click()
+            driver.find_element(By.CLASS_NAME, "CloseButton-sc-ecivd4").click()
+        except (NoSuchElementException, ElementNotInteractableException):
+            pass
+
+
+def get_gif_links(query):
+    # TODO: find method to extract api key
+    api_key = "Gc7131jiJuvI7IdN0HZ1D7nh0ow5BU6g"
+    total_count = 25
+    offset = 0
+    while total_count - 25 >= offset:
+        link = f"https://api.giphy.com/v1/gifs/search?offset={offset}&type=gifs&sort=&q={query}&api_key={api_key}"
+        raw_json = requests.get(link).json()
+        total_count = raw_json["pagination"]["total_count"]
+        for obj in raw_json["data"]:
+            yield obj["url"]
+        offset += 25
 
 
 def init():
@@ -67,8 +152,11 @@ def init():
     wait = WebDriverWait(driver, 3)
 
     eventer = Eventer()
-    eventer.add_handler("open_video", open_first_in_search)
+    eventer.add_handler("open_video", open_first_video_in_search)
     eventer.add_handler("open_link", open_link)
+
+    eventer.add_handler("show_gifs", show_gifs)
+
     eventer.add_handler("stop", stop)
 
     print("INFO: browser module initialized")
@@ -81,8 +169,12 @@ def stop():
 
 
 if __name__ == "__main__":
-    from time import sleep
-
     init()
-    sleep(60)
+    Eventer.call_event("show_gifs", {"query": "anime"})
+    sleep(20)
+    Eventer.call_event("show_gifs", {"query": "cat"})
+    sleep(20)
+    Eventer.call_event("open_video", {"query": "зимнелетние похожденмя"})
+    sleep(20)
+
     stop()
