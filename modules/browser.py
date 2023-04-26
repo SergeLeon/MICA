@@ -10,10 +10,7 @@ from selenium.common import NoSuchElementException, ElementNotInteractableExcept
 
 import chromedriver_autoinstaller
 
-from core import Eventer
-
-FULL_SCREEN_BROWSER = True
-FULL_SCREEN_VIDEO = True
+from core import Eventer, config
 
 driver: webdriver.Chrome
 wait: WebDriverWait
@@ -49,7 +46,7 @@ def lock_function(func):
 
 def get_driver():
     options = webdriver.ChromeOptions()
-    if FULL_SCREEN_BROWSER:
+    if config.getboolean("browser", "full_screen_browser", fallback=True):
         options.add_argument("--kiosk")
         options.add_experimental_option("detach", True)
 
@@ -86,7 +83,7 @@ def open_first_video_in_search(params):
         EC.visibility_of_element_located((By.ID, "video-title"))
     ).click()
 
-    if FULL_SCREEN_VIDEO:
+    if config.getboolean("browser", "full_screen_video", fallback=True):
         full_screen_current_video()
 
 
@@ -111,7 +108,7 @@ def open_link(params):
 
 @stop_other
 @lock_function
-def show_gifs(params, timeout=5):
+def show_gifs(params):
     query = params["query"]
     gif_links = get_gif_links(query)
 
@@ -120,7 +117,7 @@ def show_gifs(params, timeout=5):
             return
 
         driver.get(f"{gif_link}/tile")
-        sleep(timeout)
+        sleep(config.getint("browser", "gif_timeout", fallback=5))
         try:
             driver.find_element(By.ID, "didomi-notice-agree-button").click()
             driver.find_element(By.CLASS_NAME, "CloseButton-sc-ecivd4").click()
@@ -142,9 +139,19 @@ def get_gif_links(query):
         offset += 25
 
 
+def init_config():
+    if not config.has_section("browser"):
+        config.add_section("browser")
+    config.set_if_none("browser", "full_screen_browser", True)
+    config.set_if_none("browser", "full_screen_video", True)
+    config.set_if_none("browser", "gif_timeout", 5)
+
+
 def init():
     global driver
     global wait
+
+    init_config()
 
     chromedriver_autoinstaller.install(cwd=True)
 

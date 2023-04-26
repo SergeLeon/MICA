@@ -2,6 +2,7 @@
 *env
 **driver.exe
 **vosk-model*
+config.ini
 
 __pycache__
 .idea
