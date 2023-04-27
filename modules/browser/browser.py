@@ -1,4 +1,5 @@
 from time import sleep
+from pathlib import Path
 
 import requests
 from selenium import webdriver
@@ -153,7 +154,7 @@ def init():
 
     init_config()
 
-    chromedriver_autoinstaller.install(cwd=True)
+    chromedriver_autoinstaller.install(path=str(Path(__file__).parent))
 
     driver = get_driver()
     wait = WebDriverWait(driver, 3)
