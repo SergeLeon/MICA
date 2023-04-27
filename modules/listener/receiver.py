@@ -5,10 +5,9 @@ from time import sleep
 import vosk
 import sounddevice
 
-from core import Eventer
+from core import Eventer, config
 from .handler import handle_user_request, get_used_name
-
-VOSK_MODEL_PATH = "vosk-model-small-ru-0.22"
+from .downloader import download_model
 
 running: bool
 successfully_started = None
@@ -23,8 +22,10 @@ def callback(indata, frames, time, status):
 def listening_loop():
     global successfully_started
     try:
-        model = vosk.Model(VOSK_MODEL_PATH)
-    except:
+        model_path = download_model(config.get("listener", "language", fallback="ru"))
+        model = vosk.Model(model_path=str(model_path))
+    except Exception as exc:
+        print(exc)
         successfully_started = False
         return
 
@@ -62,6 +63,12 @@ def handle_raw_data(data, recognizer):
         print(part_text)
 
 
+def init_config():
+    if not config.has_section("listener"):
+        config.add_section("listener")
+    config.set_if_none("listener", "language", "ru")
+
+
 def init():
     if not sounddevice.default.device:
         print("WARNING: could not find an available microphone")
@@ -74,6 +81,8 @@ def init():
     global running
     global data_queue
     global eventer
+
+    init_config()
 
     running = True
     data_queue = queue.Queue()
