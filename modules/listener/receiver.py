@@ -86,9 +86,13 @@ def init():
 
     running = True
     data_queue = queue.Queue()
-    eventer = Eventer()
 
-    Thread(target=listening_loop).start()
+    eventer = Eventer()
+    eventer.add_handler("stop", stop)
+
+    thread = Thread(target=listening_loop)
+    thread.name = "listener"
+    thread.start()
 
     while successfully_started is None:
         sleep(0.5)
