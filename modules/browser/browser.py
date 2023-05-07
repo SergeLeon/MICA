@@ -20,14 +20,18 @@ lock = False
 need_to_stop = False
 
 
+def stop_actions():
+    global lock
+    global need_to_stop
+    need_to_stop = True
+    while lock:
+        sleep(0.5)
+    need_to_stop = False
+
+
 def stop_other(func):
     def _wrapper(*args, **kwargs):
-        global lock
-        global need_to_stop
-        need_to_stop = True
-        while lock:
-            sleep(0.5)
-        need_to_stop = False
+        stop_actions()
         result = func(*args, **kwargs)
         return result
 
@@ -171,6 +175,7 @@ def init():
 
 
 def stop():
+    stop_actions()
     driver.quit()
 
     print("INFO: browser module stopped")
