@@ -49,19 +49,13 @@ def updating_loop():
 
 
 def check_updates() -> bool:
-    env = {
-        **os.environ,
-        "LC_ALL": "C",
-    }
-    process = subprocess.Popen(["git", "status", "-uno"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    stdoutput, stderroutput = process.communicate()
-    return b"Your branch is up to date with" not in stdoutput
+    process = subprocess.Popen(["git", "fetch", "--dry-run"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return any(process.communicate())
 
 
 def update():
     process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdoutput, stderroutput = process.communicate()
-    print(f"INFO: MICA was updated {stdoutput}")
+    print(f"INFO: MICA was updated {process.communicate()}")
 
 
 def check_git():
@@ -108,4 +102,4 @@ def init():
 
 
 if __name__ == "__main__":
-    init()
+    print(check_updates())
