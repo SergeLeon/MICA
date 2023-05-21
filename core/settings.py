@@ -1,4 +1,7 @@
 import configparser
+from pathlib import Path
+
+CONFIG_PATH = Path(__file__).parent.parent / "config.ini"
 
 
 class AutoSaveConfigParser(configparser.ConfigParser):
@@ -36,10 +39,24 @@ class AutoSaveConfigParser(configparser.ConfigParser):
         with open(self._filename, 'w') as file:
             self.write(file)
 
+    def as_dict(self):
+        the_dict = {}
+        for section in self.sections():
+            the_dict[section] = {}
+            for key, val in self.items(section):
+                if val.isnumeric():
+                    val = int(val)
+                elif val == "True":
+                    val = True
+                elif val == "False":
+                    val = False
+                the_dict[section][key] = val
+        return the_dict
+
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
         self.save()
 
 
 config = AutoSaveConfigParser()
-config.read("config.ini")
+config.read(CONFIG_PATH)
