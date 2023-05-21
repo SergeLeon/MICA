@@ -4,6 +4,8 @@ import threading
 import subprocess
 from time import sleep
 
+from loguru import logger
+
 from core import Eventer, config
 
 running: bool = False
@@ -29,13 +31,6 @@ def restart():
     os.execv(sys.executable, ["python"] + sys.argv)
 
 
-def init_config():
-    if not config.has_section("updater"):
-        config.add_section("updater")
-    config.set_if_none("updater", "autoupdate", True)
-    config.set_if_none("updater", "check_period", 900)
-
-
 def updating_loop():
     sleep(20)
     while running:
@@ -48,16 +43,6 @@ def updating_loop():
             sleep(1)
 
 
-def check_updates() -> bool:
-    process = subprocess.Popen(["git", "fetch", "--dry-run"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return any(process.communicate())
-
-
-def update():
-    process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(f"INFO: MICA was updated {process.communicate()}")
-
-
 def check_git():
     try:
         process = subprocess.Popen(["git"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -67,21 +52,32 @@ def check_git():
         return False
 
 
-def stop():
-    global running
-    running = False
-    print("INFO: updater module stopped")
+def check_updates() -> bool:
+    process = subprocess.Popen(["git", "fetch", "--dry-run"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return any(process.communicate())
+
+
+def update():
+    process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    logger.info(f"MICA was updated {process.communicate()}")
+
+
+def init_config():
+    if not config.has_section("updater"):
+        config.add_section("updater")
+    config.set_if_none("updater", "autoupdate", True)
+    config.set_if_none("updater", "check_period", 900)
 
 
 def init():
     global running
 
     if running:
-        print("WARNING: updater module already initialized")
+        logger.warning("updater module already initialized")
         return
 
     if not check_git():
-        print("WARNING: updater module cannot be run without git installed")
+        logger.warning("updater module cannot be run without git installed")
         return
 
     init_config()
@@ -98,7 +94,13 @@ def init():
 
         running = True
 
-    print("INFO: updater module initialized")
+    logger.info("updater module initialized")
+
+
+def stop():
+    global running
+    running = False
+    logger.info("updater module stopped")
 
 
 if __name__ == "__main__":

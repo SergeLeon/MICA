@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 
 import chromedriver_autoinstaller
+from loguru import logger
 
 from core import Eventer, config
 
@@ -171,14 +172,14 @@ def init():
 
     eventer.add_handler("stop", stop)
 
-    print("INFO: browser module initialized")
+    logger.info("browser module initialized")
 
 
 def stop():
     stop_actions()
     driver.quit()
 
-    print("INFO: browser module stopped")
+    logger.info("browser module stopped")
 
 
 if __name__ == "__main__":

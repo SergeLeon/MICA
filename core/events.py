@@ -1,6 +1,8 @@
 from typing import Callable
 from threading import Thread
 
+from loguru import logger
+
 
 class Eventer:
     _handlers = {}
@@ -11,12 +13,12 @@ class Eventer:
             cls._handlers[event] = list()
 
         cls._handlers[event].append(handler)
-        print(f"DEBUG: for {event} added handler {handler}")
+        logger.debug(f"for {event} added handler {handler}")
 
     @classmethod
     def call_event(cls, event, params=None):
         if event not in cls._handlers:
-            print(f"WARNING: {event} handlers not defined")
+            logger.warning(f"{event} handlers not defined")
             return
 
         for handler in cls._handlers[event]:
@@ -25,4 +27,4 @@ class Eventer:
             else:
                 Thread(target=handler).start()
 
-            print(f"DEBUG: started {handler} on {event} with {params=}")
+            logger.debug(f"started {handler} on {event} with {params=}")

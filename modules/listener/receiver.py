@@ -4,6 +4,7 @@ from time import sleep
 
 import vosk
 import sounddevice
+from loguru import logger
 
 from core import Eventer, config
 from .handler import handle_user_request, get_used_name
@@ -13,6 +14,8 @@ running: bool
 successfully_started = None
 data_queue: queue.Queue
 eventer: Eventer
+
+vosk.SetLogLevel(-1)
 
 
 def callback(indata, frames, time, status):
@@ -24,8 +27,8 @@ def listening_loop():
     try:
         model_path = download_model(config.get("listener", "language", fallback="ru"))
         model = vosk.Model(model_path=str(model_path))
-    except Exception as exc:
-        print(exc)
+    except Exception:
+        logger.exception("cannot import model")
         successfully_started = False
         return
 
@@ -51,16 +54,15 @@ def handle_raw_data(data, recognizer):
     if recognizer.AcceptWaveform(data):
         full_text = recognizer.Result()
         full_text = full_text[14:-3]
-        print(full_text)
+
         name = get_used_name(full_text)
         if name:
-            print(f"DEBUG: request received {full_text}")
+            logger.debug(f"request received {full_text}")
             handle_user_request(full_text, name)
 
     else:
         part_text = recognizer.PartialResult()
         part_text = part_text[17:-3]
-        print(part_text)
 
 
 def init_config():
@@ -71,11 +73,11 @@ def init_config():
 
 def init():
     if not sounddevice.default.device:
-        print("WARNING: could not find an available microphone")
+        logger.warning("could not find an available microphone")
         return
 
     if successfully_started:
-        print("WARNING: listener module already initialized")
+        logger.warning("listener module already initialized")
         return
 
     global running
@@ -98,9 +100,9 @@ def init():
         sleep(0.5)
 
     if successfully_started:
-        print("INFO: listener module initialized")
+        logger.info("listener module initialized")
     else:
-        print("WARNING: failed to start listener module")
+        logger.warning("failed to start listener module")
 
 
 def stop():
@@ -109,7 +111,7 @@ def stop():
     running = False
     successfully_started = None
 
-    print("INFO: listener module stopped")
+    logger.info("listener module stopped")
 
 
 if __name__ == "__main__":

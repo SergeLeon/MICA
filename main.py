@@ -1,6 +1,10 @@
 from pathlib import Path
 from importlib import import_module
 
+from loguru import logger
+
+logger.add("logs/{time}.log", rotation="12:00", compression="zip", backtrace=True, diagnose=True)
+
 
 def main():
     init_modules()
@@ -15,18 +19,17 @@ def init_modules():
             continue
 
         module_name = module_path.name.rsplit(".py", 1)[0]
-        print(f"DEBUG: importing module {module_name}")
+        logger.debug(f"importing module {module_name}")
         try:
             module = import_module(f"modules.{module_name}")
-        except ModuleNotFoundError as exc:
-            print(f"WARNING: cannot import {module_name}")
-            print(exc)
+        except ModuleNotFoundError:
+            logger.exception(f"cannot import {module_name}")
             continue
 
         if hasattr(module, "init") and callable(module.init):
             module.init()
         else:
-            print(f"WARNING: {module_name} is not MICA module")
+            logger.error(f"{module_name} is not MICA module")
 
 
 if __name__ == "__main__":
