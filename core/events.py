@@ -13,7 +13,7 @@ class Eventer:
             cls._handlers[event] = list()
 
         cls._handlers[event].append(handler)
-        logger.debug(f"for {event} added handler {handler}")
+        logger.debug(f"for {event} added handler {handler.__module__}.{handler.__name__}")
 
     @classmethod
     def call_event(cls, event, params=None):
