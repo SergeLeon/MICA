@@ -46,9 +46,9 @@ class AutoSaveConfigParser(configparser.ConfigParser):
             for key, val in self.items(section):
                 if val.isnumeric():
                     val = int(val)
-                elif val == "True":
+                elif val.lower() in ("true", "yes", "on"):
                     val = True
-                elif val == "False":
+                elif val.lower() in ("false", "no", "off"):
                     val = False
                 the_dict[section][key] = val
         return the_dict
