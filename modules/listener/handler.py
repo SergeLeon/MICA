@@ -29,3 +29,6 @@ def handle_user_request(text: str, used_name: str):
             return
         search_query = search_query.split(" ", 1)[1]
         Eventer.call_event("show_gifs", {"query": search_query})
+
+    elif "стоп" in request or "останови" in request:
+        Eventer.call_event("stop")
