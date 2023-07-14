@@ -1,0 +1,76 @@
+% rebase('base.html', title='settings')
+
+<div class="text-center p-3">
+    <h1>Settings</h1>
+</div>
+
+% for module_name, module_settings in config.items():
+
+<div class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center">
+    <div class="list-group list-group-flush mx-auto bg-body-secondary rounded-3">
+
+        <div class="justify-content-between list-group-item">
+            <h5 class="mb-1">{{module_name.replace("_", " ").title()}}</h5>
+        </div>
+
+        % for setting_name, setting_value in module_settings.items():
+        <div class="list-group-item">
+            % value_type = type(setting_value)
+
+            <div class="input-group">
+
+                % if value_type == str:
+                <span class="input-group-text">{{setting_name.replace("_", " ").title()}}</span>
+                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="text" value="{{setting_value}}"
+                       autocomplete="off">
+
+                % elif value_type == int:
+                <span class="input-group-text">{{setting_name.replace("_", " ").title()}}</span>
+                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="number" value="{{setting_value}}">
+
+                % elif value_type == bool:
+                <input name="{{module_name}}-{{setting_name}}" type="checkbox" class="btn-check" id="{{module_name}}-{{setting_name}}" {{"checked" if setting_value else ""}} autocomplete="off">
+                <label class="btn btn-outline-secondary" for="{{module_name}}-{{setting_name}}">{{setting_name.replace("_", " ").title()}}</label><br>
+                % end
+
+            </div>
+        </div>
+        % end
+
+    </div>
+</div>
+
+% end
+
+<script>
+  addEventListener("change", (event) => {});
+
+onchange = (event) => {
+    let target = event.target
+
+    let info = target.name.split("-")
+
+    let module = info[0]
+    let setting = info[1]
+
+    let body = {
+            'module': module,
+            'setting': setting,
+            'value': target.value
+        }
+    if (target.type == "checkbox") {
+        body.value = target.checked
+    }
+
+    let response = fetch('', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    })
+
+};
+
+</script>

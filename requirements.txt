@@ -7,3 +7,4 @@ sounddevice~=0.4.6
 requests~=2.28.2
 
 loguru~=0.7.0
+bottle~=0.12.25
