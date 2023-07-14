@@ -62,6 +62,8 @@ def get_driver():
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
+    options.add_argument("--ignore-certificate-errors")
+
     options.page_load_strategy = 'eager'
 
     # options.add_argument("--allow-profiles-outside-user-dir")
