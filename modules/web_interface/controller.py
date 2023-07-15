@@ -64,6 +64,9 @@ def index():
     return err
 
 
+# v settings v
+
+
 @route("/settings")
 @auth_basic(is_authenticated)
 def settings():
@@ -76,6 +79,56 @@ def change_setting():
     json = request.json
     config.set(json["module"], json["setting"], json["value"])
     return 'OK'
+
+
+# ^ settings ^
+
+
+# v control panel v
+
+
+EVENTS = [
+    {
+        "name": "stop",
+    },
+    {
+        "name": "restart",
+    },
+    {
+        "name": "open_link",
+        "url": str,
+    },
+    {
+        "name": "open_video",
+        "query": str,
+    },
+    {
+        "name": "show_gifs",
+        "query": str,
+    },
+]
+
+
+@route("/control")
+@auth_basic(is_authenticated)
+def control_panel():
+    return template("control", events=EVENTS)
+
+
+@post("/control")
+@auth_basic(is_authenticated)
+def call_event():
+    forms = request.forms
+    event = forms["event"]
+    forms.pop("event", None)
+    for param in forms:
+        forms[param] = forms[param].encode('l1').decode()
+
+    Eventer.call_event(event, dict(forms) if len(forms) else None)
+    return 'OK'
+
+
+# ^ control panel ^
 
 
 def init_config():

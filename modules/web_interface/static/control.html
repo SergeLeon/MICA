@@ -1,6 +1,33 @@
 % rebase('base.html', title='control')
 
 <div class="text-center p-3">
-    <h1>Control</h1>
+    <h1>Control Panel</h1>
 </div>
 
+% for event in events:
+
+<div class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center list-group list-group-flush bg-body-secondary">
+    <style>
+        .hide { position:absolute; top:-1px; left:-1px; width:1px; height:1px; }
+    </style>
+    <iframe name="hiddenFrame" class="hide"></iframe>
+    <form action="" method="post" target="hiddenFrame" class="input-group mb-2">
+        % for param_name, param_type in event.items():
+            % if param_name == "name":
+            <span class="input-group-text">{{event["name"].replace("_", " ").title()}}</span>
+            <input type="hidden" name="event" value="{{event['name']}}" />
+            % elif param_type == str:
+            <input name="{{param_name}}" class="form-control form-control-lg" required placeholder="{{param_name.replace("_", " ").title()}}" autocomplete="off">
+            % elif param_type == int:
+            <input name="{{param_name}}" class="form-control form-control-lg" required placeholder="{{param_name.replace("_", " ").title()}}" type="number">
+            % elif param_type == bool:
+            <input name="{{param_name}}" type="checkbox" class="btn-check" id="{{param_name}}" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="{{param_name}}">{{param_name.replace("_", " ").title()}}</label><br>
+            % end
+        % end
+
+        <input type="submit" class="btn btn-primary btn-lg">
+    </form>
+</div>
+
+% end
