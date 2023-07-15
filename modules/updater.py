@@ -41,6 +41,8 @@ def updating_loop():
             if not running:
                 break
             sleep(1)
+        if not running:
+            break
 
 
 def check_git():
