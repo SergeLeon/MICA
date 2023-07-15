@@ -7,7 +7,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common import NoSuchElementException, ElementNotInteractableException
+from selenium.common import NoSuchElementException, ElementNotInteractableException, WebDriverException
 
 import chromedriver_autoinstaller
 from loguru import logger
@@ -111,7 +111,12 @@ def full_screen_current_video():
 @lock_function
 def open_link(params):
     url = params["url"]
-    driver.get(url)
+    if "http://" not in url:
+        url = f"http://{url}"
+    try:
+        driver.get(url)
+    except WebDriverException:
+        logger.warning(f"unable to load page '{url}'")
 
 
 @stop_other
