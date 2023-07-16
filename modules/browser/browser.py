@@ -62,7 +62,7 @@ def get_driver():
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
-    options.add_argument("--ignore-certificate-errors")
+    options.add_argument('log-level=3')
 
     options.page_load_strategy = 'eager'
 
