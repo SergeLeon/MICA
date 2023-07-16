@@ -53,11 +53,11 @@ def send_static(filename):
 @route("/")
 def index():
     if config.get("web_interface", "password"):
-        redirect("/settings")
+        redirect("/control")
 
     if request.auth:
         config.set("web_interface", "password", request.auth[1])
-        redirect("/settings")
+        redirect("/control")
 
     err = HTTPError(401, "")
     err.add_header('WWW-Authenticate', 'Basic realm="%s"')
