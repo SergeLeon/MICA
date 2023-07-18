@@ -45,7 +45,12 @@ def is_authenticated(user, password):
     return password == config.get("web_interface", "password")
 
 
-@route('/static/<filename:path>')
+@route("/favicon.ico")
+def favicon():
+    return static_file("favicon.ico", root=STATIC_PATH)
+
+
+@route("/static/<filename:path>")
 def send_static(filename):
     return static_file(filename, root=STATIC_PATH)
 
