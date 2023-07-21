@@ -169,7 +169,7 @@ def init():
     chromedriver_autoinstaller.install(path=str(Path(__file__).parent))
 
     driver = get_driver()
-    wait = WebDriverWait(driver, 3)
+    wait = WebDriverWait(driver, 30)
 
     eventer = Eventer()
     eventer.add_handler("open_video", open_first_video_in_search)
