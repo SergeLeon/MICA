@@ -114,8 +114,8 @@ def full_screen_current_video():
 @stop_other
 @lock_function
 def open_link(params):
-    url = params["url"]
-    if "http://" not in url:
+    url = params["url"].strip()
+    if not url.startswith("http"):
         url = f"http://{url}"
     try:
         driver.get(url)
