@@ -27,4 +27,4 @@ class Eventer:
             else:
                 Thread(target=handler).start()
 
-            logger.debug(f"started {handler} on {event} with {params=}")
+            logger.debug(f"started {handler.__module__}.{handler.__name__} on {event} with {params=}")
