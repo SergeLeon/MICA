@@ -21,7 +21,7 @@ def stop_all():
             continue
 
         thread = threads[0]
-        if hasattr(thread, "_target") and getattr(thread, "_target") == restart:
+        if thread.name == "updater" or (hasattr(thread, "_target") and getattr(thread, "_target") == restart):
             break
 
 
@@ -34,15 +34,17 @@ def restart():
 def updating_loop():
     sleep(20)
     while running:
+        if not config.getboolean("updater", "autoupdate"):
+            sleep(30)
+            continue
+
         if check_updates():
             update()
             restart()
         for _ in range(config.getint("updater", "check_period")):
             if not running:
-                break
+                return
             sleep(1)
-        if not running:
-            break
 
 
 def check_git():
