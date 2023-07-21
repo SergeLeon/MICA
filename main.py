@@ -26,10 +26,13 @@ def init_modules():
             logger.exception(f"cannot import {module_name}")
             continue
 
-        if hasattr(module, "init") and callable(module.init):
-            module.init()
-        else:
+        if not (hasattr(module, "init") and callable(module.init)):
             logger.error(f"{module_name} is not MICA module")
+            continue
+        try:
+            module.init()
+        except:
+            logger.exception(f"cannot init {module_name}")
 
 
 if __name__ == "__main__":
