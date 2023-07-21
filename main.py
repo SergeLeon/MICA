@@ -3,7 +3,7 @@ from importlib import import_module
 
 from loguru import logger
 
-logger.add("logs/{time}.log", rotation="12:00", compression="zip", backtrace=True, diagnose=True)
+logger.add(Path(__file__).parent / "logs/{time}.log", rotation="12:00", compression="zip", backtrace=True, diagnose=True)
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
 
 
 def init_modules():
-    module_paths = Path("modules").iterdir()
+    module_paths = (Path(__file__).parent / "modules").iterdir()
     for module_path in module_paths:
         is_module = (module_path.is_file() and module_path.name.endswith(".py")) or \
                     (module_path.is_dir() and (module_path / "__init__.py").exists())
