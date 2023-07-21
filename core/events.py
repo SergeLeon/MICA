@@ -4,6 +4,15 @@ from threading import Thread
 from loguru import logger
 
 
+def log_exceptions(func: Callable) -> Callable:
+    def _wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            logger.exception(f"an error occurred while executing {func.__module__}.{func.__name__}")
+    return _wrapper
+
+
 class Eventer:
     _handlers = {}
 
@@ -22,9 +31,10 @@ class Eventer:
             return
 
         for handler in cls._handlers[event]:
+            logged_handler = log_exceptions(handler)
             if params:
-                Thread(target=handler, args=(params,)).start()
+                Thread(target=logged_handler, args=(params,)).start()
             else:
-                Thread(target=handler).start()
+                Thread(target=logged_handler).start()
 
             logger.debug(f"started {handler.__module__}.{handler.__name__} on {event} with {params=}")
