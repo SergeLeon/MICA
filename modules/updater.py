@@ -3,10 +3,13 @@ import sys
 import threading
 import subprocess
 from time import sleep
+from pathlib import Path
 
 from loguru import logger
 
 from core import Eventer, config
+
+PROJECT_PATH = Path(__file__).parent.parent
 
 running: bool = False
 
@@ -49,7 +52,7 @@ def updating_loop():
 
 def check_git():
     try:
-        process = subprocess.Popen(["git"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["git"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.wait()
         return True
     except FileNotFoundError:
@@ -57,12 +60,12 @@ def check_git():
 
 
 def check_updates() -> bool:
-    process = subprocess.Popen(["git", "fetch", "--dry-run"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(["git", "fetch", "--dry-run"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return any(process.communicate())
 
 
 def update():
-    process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(["git", "pull"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logger.info(f"MICA was updated {process.communicate()}")
 
 
