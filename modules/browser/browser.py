@@ -43,7 +43,11 @@ def lock_function(func):
     def _wrapper(*args, **kwargs):
         global lock
         lock = True
-        result = func(*args, **kwargs)
+        try:
+            result = func(*args, **kwargs)
+        except Exception as e:
+            lock = False
+            raise e
         lock = False
         return result
 
