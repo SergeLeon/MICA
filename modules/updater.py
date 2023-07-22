@@ -64,12 +64,20 @@ def check_git():
 
 def check_updates() -> bool:
     process = subprocess.Popen(["git", "fetch", "--dry-run"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return any(process.communicate())
+    outs, errs = process.communicate(timeout=15)
+    if errs:
+        logger.warning(f"git raise error: {errs}")
+        return False
+    return bool(outs)
 
 
 def update():
     process = subprocess.Popen(["git", "pull"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    logger.info(f"MICA was updated {process.communicate()}")
+    outs, errs = process.communicate(timeout=15)
+    if errs:
+        logger.warning(f"cannot update MICA: {errs}")
+    else:
+        logger.info(f"MICA was updated {outs}")
 
 
 def init_config():
