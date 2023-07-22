@@ -35,15 +35,18 @@ def restart():
 
 
 def updating_loop():
-    sleep(20)
     while running:
         if not config.getboolean("updater", "autoupdate"):
-            sleep(30)
+            for _ in range(30):
+                if not running:
+                    return
+                sleep(1)
             continue
 
         if check_updates():
             update()
             restart()
+
         for _ in range(config.getint("updater", "check_period")):
             if not running:
                 return
@@ -94,12 +97,11 @@ def init():
 
     eventer.add_handler("restart", restart)
 
-    if config.getboolean("updater", "autoupdate"):
-        thread = threading.Thread(target=updating_loop)
-        thread.name = "updater"
-        thread.start()
+    thread = threading.Thread(target=updating_loop)
+    thread.name = "updater"
+    thread.start()
 
-        running = True
+    running = True
 
     logger.info("updater module initialized")
 
