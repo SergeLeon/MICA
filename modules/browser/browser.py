@@ -134,6 +134,7 @@ def show_gifs(params):
             return
 
         driver.get(f"{gif_link}/tile")
+        driver.execute_script("document.body.style.overflow = 'hidden';")
         sleep(config.getint("browser", "gif_timeout", fallback=5))
         try:
             driver.find_element(By.ID, "didomi-notice-agree-button").click()
