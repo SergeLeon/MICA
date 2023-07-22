@@ -105,11 +105,11 @@ def init():
 
     eventer.add_handler("restart", restart)
 
+    running = True
+
     thread = threading.Thread(target=updating_loop)
     thread.name = "updater"
     thread.start()
-
-    running = True
 
     logger.info("updater module initialized")
 
