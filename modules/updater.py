@@ -64,17 +64,27 @@ def check_git():
 
 def check_updates() -> bool:
     process = subprocess.Popen(["git", "fetch", "--dry-run"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    outs, errs = process.communicate(timeout=15)
-    if errs:
+    try:
+        outs, errs = process.communicate(timeout=15)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        outs, errs = process.communicate()
+
+    if b"fatal" in errs:
         logger.warning(f"git raise error: {errs}")
         return False
-    return bool(outs)
+    return bool(errs)
 
 
 def update():
     process = subprocess.Popen(["git", "pull"], cwd=PROJECT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    outs, errs = process.communicate(timeout=15)
-    if errs:
+    try:
+        outs, errs = process.communicate(timeout=15)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        outs, errs = process.communicate()
+
+    if b"fatal" in errs:
         logger.warning(f"cannot update MICA: {errs}")
     else:
         logger.info(f"MICA was updated {outs}")
@@ -122,3 +132,4 @@ def stop():
 
 if __name__ == "__main__":
     print(check_updates())
+    print(update())
