@@ -10,6 +10,7 @@ def log_exceptions(func: Callable) -> Callable:
             return func(*args, **kwargs)
         except:
             logger.exception(f"an error occurred while executing {func.__module__}.{func.__name__}")
+
     return _wrapper
 
 
@@ -33,8 +34,11 @@ class Eventer:
         for handler in cls._handlers[event]:
             logged_handler = log_exceptions(handler)
             if params:
-                Thread(target=logged_handler, args=(params,)).start()
+                thread = Thread(target=logged_handler, args=(params,))
             else:
-                Thread(target=logged_handler).start()
+                thread = Thread(target=logged_handler)
 
-            logger.debug(f"started {handler.__module__}.{handler.__name__} on {event} with {params=}")
+            thread.name = f"{handler.__module__}.{handler.__name__}"
+            thread.start()
+
+            logger.debug(f"started {thread.name} on {event} with {params=}")

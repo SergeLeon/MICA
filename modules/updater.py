@@ -17,15 +17,14 @@ running: bool = False
 def stop_all():
     Eventer.call_event("stop")
     # ignore first MainThread
-    while threading.enumerate()[1:]:
-        sleep(1)
-        threads = threading.enumerate()[1:]
+    while threads := threading.enumerate()[1:]:
         if len(threads) > 1:
             continue
 
         thread = threads[0]
-        if thread.name == "updater" or (hasattr(thread, "_target") and getattr(thread, "_target") == restart):
+        if thread.name in ["updater", "modules.updater.restart", "modules.updater.stop"]:
             break
+        sleep(1)
 
 
 def restart():
