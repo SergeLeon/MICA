@@ -1,0 +1,47 @@
+% rebase('base.html', title='media manager')
+
+<div class="text-center p-3">
+    <h1>Media Manager</h1>
+</div>
+
+
+<form action="/media/upload" method="post" enctype="multipart/form-data"
+      class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center">
+    <div class="list-group list-group-flush mx-auto bg-body-secondary rounded-3">
+
+        <div class="justify-content-between list-group-item">
+            <h5 class="mb-1">Upload Media</h5>
+        </div>
+
+        <div class="list-group-item">
+            <div class="input-group">
+                <input name="upload" accept="image/*" class="form-control" type="file" required autocomplete="off">
+            </div>
+        </div>
+
+        <input type="submit" class="btn btn-primary btn-lg">
+
+    </div>
+</form>
+<div class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center">
+    <div class="container-fluid list-group list-group-flush mx-auto bg-body-secondary rounded-3">
+
+        <div class="jumbotron justify-content-between list-group-item">
+            <h5 class="text-center">Show Media</h5>
+        </div>
+
+        <div class="row">
+            % for file in files:
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <figure>
+                    <a href="media/show/{{file.name}}" target="_blank">
+                        <img src="media/uploaded/{{file.name}}" alt="{{file.name}}" class="img-thumbnail grayscale">
+                    </a>
+                    <figcaption>{{file.name}}</figcaption>
+                </figure>
+            </div>
+            % end
+        </div>
+    </div>
+</div>
+

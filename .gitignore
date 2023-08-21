@@ -6,6 +6,8 @@ logs
 **driver.exe
 **vosk-model*
 
+modules/web_interface/uploaded
+
 config.ini
 
 __pycache__

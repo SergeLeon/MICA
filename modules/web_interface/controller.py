@@ -1,3 +1,4 @@
+import os
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 from threading import Thread
 from pathlib import Path
@@ -11,6 +12,9 @@ from core import Eventer, config
 
 STATIC_PATH = Path(__file__).parent / "static"
 TEMPLATE_PATH.insert(0, STATIC_PATH)
+
+UPLOADED_PATH = Path(__file__).parent / "uploaded"
+UPLOADED_PATH.mkdir(exist_ok=True)
 
 
 def get_ip():
@@ -135,6 +139,39 @@ def call_event():
 
 # ^ control panel ^
 
+
+# v media manager v
+
+
+@route("/media/uploaded/<filename:path>")
+def send_uploaded(filename):
+    return static_file(filename, root=UPLOADED_PATH)
+
+
+@route("/media")
+@auth_basic(is_authenticated)
+def media_manager():
+    return template("media", files=UPLOADED_PATH.iterdir())
+
+
+@post('/media/upload')
+def upload_media():
+    upload = request.files.get('upload')
+    file_path = UPLOADED_PATH / upload.filename
+    upload.save(str(file_path))
+    redirect("/media")
+
+
+@route('/media/show/<filename:path>')
+def upload_media(filename):
+    Eventer.call_event(
+        "open_link",
+        {"url": f"127.0.0.1/media/uploaded/{filename}"}
+    )
+    redirect("/media")
+
+
+# ^ media manager ^
 
 def init_config():
     if not config.has_section("web_interface"):
