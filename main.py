@@ -1,3 +1,5 @@
+import sys
+import subprocess
 from pathlib import Path
 from importlib import import_module
 
@@ -7,7 +9,13 @@ logger.add(Path(__file__).parent / "logs/{time}.log", rotation="12:00", compress
 
 
 def main():
+    install_dependencies()
     init_modules()
+
+
+def install_dependencies():
+    project_path = Path(__file__).parent
+    return subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", project_path / "requirements.txt"])
 
 
 def init_modules():
