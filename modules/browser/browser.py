@@ -119,6 +119,8 @@ def open_link(params):
         url = f"http://{url}"
     try:
         driver.get(url)
+        if ("://youtu.be" in url or "://youtube" in url) and config.getboolean("browser", "full_screen_video", fallback=True):
+            full_screen_current_video()
     except WebDriverException:
         logger.warning(f"unable to load page '{url}'")
 
