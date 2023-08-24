@@ -1,5 +1,5 @@
-selenium==4.10.0
-chromedriver-autoinstaller==0.4.1
+selenium==4.11.2
+chromedriver-autoinstaller==0.6.2
 
 vosk~=0.3.45
 sounddevice~=0.4.6
