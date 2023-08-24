@@ -163,10 +163,10 @@ def upload_media():
 
 
 @route('/media/show/<filename:path>')
-def upload_media(filename):
+def show_media(filename):
     Eventer.call_event(
         "open_link",
-        {"url": f"127.0.0.1/media/uploaded/{filename}"}
+        {"url": f"file:///{UPLOADED_PATH}/{filename}"}
     )
     redirect("/media")
 
