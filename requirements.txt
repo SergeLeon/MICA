@@ -8,3 +8,6 @@ requests==2.31.0
 
 loguru~=0.7.0
 bottle~=0.12.25
+
+comtypes~=1.2.0
+pycaw==20230407

@@ -1,8 +1,11 @@
-import os
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 from threading import Thread
 from pathlib import Path
 import socket
+from ctypes import cast, POINTER
+
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 from bottle import ServerAdapter, route, post, run, template, redirect, request, response, auth_basic, HTTPError, \
     static_file, TEMPLATE_PATH
@@ -75,18 +78,48 @@ def index():
 
 # v settings v
 
+def _get_volume():
+    speakers = AudioUtilities.GetSpeakers()
+    interface = speakers.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    volume = cast(interface, POINTER(IAudioEndpointVolume))
+    return volume
+
+
+def set_volume(volume_level: int):
+    volume = _get_volume()
+    volume.SetMasterVolumeLevelScalar(volume_level / 100, None)
+
+
+def get_volume() -> int:
+    volume = _get_volume()
+    return round(volume.GetMasterVolumeLevelScalar() * 100)
+
+
+@route("/settings/volume/<volume_level:int>")
+def change_volume(volume_level):
+    set_volume(volume_level)
+    redirect("/settings")
+
 
 @route("/settings")
 @auth_basic(is_authenticated)
 def settings():
-    return template("settings", config=config.as_dict())
+    try:
+        system_volume = get_volume()
+    except:
+        system_volume = "out of service"
+    return template("settings", config=config.as_dict(), volume=system_volume)
 
 
 @post("/settings")
 @auth_basic(is_authenticated)
 def change_setting():
     json = request.json
-    config.set(json["module"], json["setting"], json["value"])
+    if json["module"] == "system":
+        if json["setting"] == "volume":
+            set_volume(int(json["value"]))
+    else:
+        config.set(json["module"], json["setting"], json["value"])
     return 'OK'
 
 

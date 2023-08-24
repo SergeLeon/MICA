@@ -4,6 +4,21 @@
     <h1>Settings</h1>
 </div>
 
+<div class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center">
+    <div class="list-group list-group-flush mx-auto bg-body-secondary rounded-3">
+
+        <div class="justify-content-between list-group-item">
+            <h5 class="mb-1">Volume</h5>
+        </div>
+
+        <div class="list-group-item">
+            <output for="volume" class="form-label">{{volume}}</output>
+            <input type="range" class="form-range" min="0" max="100" step="1" id="volume" value="{{volume}}"
+                   name="system-volume" oninput="this.previousElementSibling.value = this.value">
+        </div>
+    </div>
+</div>
+
 % for module_name, module_settings in config.items():
 
 <div class="m-2 w-75 mx-auto p-3 bg-body-secondary rounded-3 text-center">
@@ -21,16 +36,20 @@
 
                 % if value_type == str:
                 <span class="input-group-text">{{setting_name.replace("_", " ").title()}}</span>
-                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="text" value="{{setting_value}}"
-                       autocomplete="off">
+                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="text"
+                       value="{{setting_value}}" autocomplete="off">
 
                 % elif value_type == int:
                 <span class="input-group-text">{{setting_name.replace("_", " ").title()}}</span>
-                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="number" value="{{setting_value}}">
+                <input name="{{module_name}}-{{setting_name}}" class="form-control" type="number"
+                       value="{{setting_value}}">
 
                 % elif value_type == bool:
-                <input name="{{module_name}}-{{setting_name}}" type="checkbox" class="btn-check" id="{{module_name}}-{{setting_name}}" {{"checked" if setting_value else ""}} autocomplete="off">
-                <label class="btn btn-outline-secondary" for="{{module_name}}-{{setting_name}}">{{setting_name.replace("_", " ").title()}}</label><br>
+                <input name="{{module_name}}-{{setting_name}}" type="checkbox" class="btn-check"
+                       id="{{module_name}}-{{setting_name}}" {{"checked" if setting_value else ""}} autocomplete="off">
+                <label class="btn btn-outline-secondary" for="{{module_name}}-{{setting_name}}">
+                    {{setting_name.replace("_", " ").title()}}
+                </label><br>
                 % end
 
             </div>
@@ -43,34 +62,34 @@
 % end
 
 <script>
-  addEventListener("change", (event) => {});
+    addEventListener("change", (event) => {});
 
-onchange = (event) => {
-    let target = event.target
+    onchange = (event) => {
+        let target = event.target
 
-    let info = target.name.split("-")
+        let info = target.name.split("-")
 
-    let module = info[0]
-    let setting = info[1]
+        let module = info[0]
+        let setting = info[1]
 
-    let body = {
-            'module': module,
-            'setting': setting,
-            'value': target.value
+        let body = {
+                'module': module,
+                'setting': setting,
+                'value': target.value
+            }
+        if (target.type == "checkbox") {
+            body.value = target.checked
         }
-    if (target.type == "checkbox") {
-        body.value = target.checked
-    }
 
-    let response = fetch('', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    })
+        let response = fetch('', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        })
 
-};
+    };
 
 </script>
