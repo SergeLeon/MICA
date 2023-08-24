@@ -166,7 +166,7 @@ def upload_media():
 def show_media(filename):
     Eventer.call_event(
         "open_link",
-        {"url": f"file:///{UPLOADED_PATH}/{filename}"}
+        {"url": f"file:///{UPLOADED_PATH}/{filename}".replace("\\", "/")}
     )
     redirect("/media")
 
