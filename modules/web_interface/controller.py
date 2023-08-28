@@ -10,12 +10,15 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 from bottle import ServerAdapter, route, post, run, template, redirect, request, response, auth_basic, HTTPError, \
     static_file, TEMPLATE_PATH
-from loguru import logger
 from PIL import Image
+from moviepy.editor import VideoFileClip
+
+from loguru import logger
 
 from core import Eventer, config
 
 THUMBNAIL_SIZE = (1128, 636)
+VIDEO_THUMBNAIL_DURATION = 10
 
 STATIC_PATH = Path(__file__).parent / "static"
 TEMPLATE_PATH.insert(0, STATIC_PATH)
@@ -180,22 +183,47 @@ def call_event():
 
 # v media manager v
 
-def create_thumbnail(file_name):
-    file_type = mimetypes.guess_type(file_name)[0]
+def get_thumbnail_size(size: tuple[int, int]):
+    if size[0] / THUMBNAIL_SIZE[0] > size[1] / THUMBNAIL_SIZE[1]:
+        width_percent = THUMBNAIL_SIZE[0] / size[0]
+        height_size = int(size[1] * width_percent)
+        return THUMBNAIL_SIZE[0], height_size
+    else:
+        height_percent = THUMBNAIL_SIZE[1] / size[1]
+        width_size = int(size[0] * height_percent)
+        return width_size, THUMBNAIL_SIZE[1]
+
+
+def create_thumbnail(filename):
+    file_type = mimetypes.guess_type(filename)[0]
 
     if not file_type:
         return
 
     if "image" in file_type:
-        image = Image.open(UPLOADED_PATH / file_name)
-        image.thumbnail(THUMBNAIL_SIZE)
-        image.save(UPLOADED_PATH / "thumbnail" / file_name)
+        with Image.open(UPLOADED_PATH / filename) as image:
+            image.thumbnail(THUMBNAIL_SIZE)
+            image.save(UPLOADED_PATH / "thumbnail" / filename)
+
+    elif "video" in file_type:
+        with VideoFileClip(str(UPLOADED_PATH / filename)) as video_clip:
+            video_clip = video_clip.speedx(video_clip.duration // VIDEO_THUMBNAIL_DURATION)
+            video_clip = video_clip.resize(get_thumbnail_size((video_clip.h, video_clip.w)))
+            video_clip.write_gif(str(UPLOADED_PATH / "thumbnail" / f"{filename.rsplit('.', 1)[0]}.gif"), fps=1)
+            logger.warning(f"Unsupported file type {file_type} on {filename}")
+    else:
+        logger.warning(f"Unsupported file type {file_type} on {filename}")
 
 
 @route("/media/uploaded/<filename:path>")
 def send_uploaded(filename: str):
-    if filename.startswith("thumbnail/") and not (UPLOADED_PATH / filename).exists():
-        create_thumbnail(filename.replace("thumbnail/", "", 1))
+    if filename.startswith("thumbnail/"):
+        real_filename = filename
+        file_type = mimetypes.guess_type(filename)[0] or ""
+        if "video" in file_type:
+            filename = f"{filename.rsplit('.', 1)[0]}.gif"
+        if not (UPLOADED_PATH / filename).exists():
+            create_thumbnail(real_filename.replace("thumbnail/", "", 1))
 
     return static_file(filename, root=UPLOADED_PATH)
 
