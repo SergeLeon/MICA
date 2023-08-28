@@ -3,6 +3,7 @@ from threading import Thread
 from pathlib import Path
 import socket
 from ctypes import cast, POINTER
+import mimetypes
 
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
@@ -10,14 +11,18 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from bottle import ServerAdapter, route, post, run, template, redirect, request, response, auth_basic, HTTPError, \
     static_file, TEMPLATE_PATH
 from loguru import logger
+from PIL import Image
 
 from core import Eventer, config
+
+THUMBNAIL_SIZE = (1128, 636)
 
 STATIC_PATH = Path(__file__).parent / "static"
 TEMPLATE_PATH.insert(0, STATIC_PATH)
 
 UPLOADED_PATH = Path(__file__).parent / "uploaded"
 UPLOADED_PATH.mkdir(exist_ok=True)
+(UPLOADED_PATH / "thumbnail").mkdir(exist_ok=True)
 
 
 def get_ip():
@@ -175,16 +180,30 @@ def call_event():
 
 # v media manager v
 
+def create_thumbnail(file_name):
+    file_type = mimetypes.guess_type(file_name)[0]
+
+    if not file_type:
+        return
+
+    if "image" in file_type:
+        image = Image.open(UPLOADED_PATH / file_name)
+        image.thumbnail(THUMBNAIL_SIZE)
+        image.save(UPLOADED_PATH / "thumbnail" / file_name)
+
 
 @route("/media/uploaded/<filename:path>")
-def send_uploaded(filename):
+def send_uploaded(filename: str):
+    if filename.startswith("thumbnail/") and not (UPLOADED_PATH / filename).exists():
+        create_thumbnail(filename.replace("thumbnail/", "", 1))
+
     return static_file(filename, root=UPLOADED_PATH)
 
 
 @route("/media")
 @auth_basic(is_authenticated)
 def media_manager():
-    return template("media", files=UPLOADED_PATH.iterdir())
+    return template("media", files=[item for item in UPLOADED_PATH.iterdir() if item.is_file()])
 
 
 @post('/media/upload')
@@ -192,6 +211,7 @@ def upload_media():
     upload = request.files.get('upload')
     file_path = UPLOADED_PATH / upload.filename
     upload.save(str(file_path))
+    create_thumbnail(upload.filename)
     redirect("/media")
 
 
