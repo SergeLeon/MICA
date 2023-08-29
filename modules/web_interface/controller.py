@@ -1,3 +1,4 @@
+import math
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 from threading import Thread
 from pathlib import Path
@@ -207,10 +208,13 @@ def create_thumbnail(filename):
 
     elif "video" in file_type:
         with VideoFileClip(str(UPLOADED_PATH / filename)) as video_clip:
-            video_clip = video_clip.speedx(video_clip.duration // VIDEO_THUMBNAIL_DURATION)
-            video_clip = video_clip.resize(get_thumbnail_size((video_clip.h, video_clip.w)))
-            video_clip.write_gif(str(UPLOADED_PATH / "thumbnail" / f"{filename.rsplit('.', 1)[0]}.gif"), fps=1)
-            logger.warning(f"Unsupported file type {file_type} on {filename}")
+            new_duration = video_clip.duration // VIDEO_THUMBNAIL_DURATION
+            if new_duration > 0:
+                video_clip = video_clip.speedx(new_duration)
+            if video_clip.w > THUMBNAIL_SIZE[0] or video_clip.h > THUMBNAIL_SIZE[1]:
+                new_size = get_thumbnail_size((video_clip.h, video_clip.w) if video_clip.rotation else (video_clip.w, video_clip.h))
+                video_clip = video_clip.resize(new_size)
+            video_clip.write_gif(str(UPLOADED_PATH / "thumbnail" / f"{str(filename).rsplit('.', 1)[0]}.gif"), fps=1)
     else:
         logger.warning(f"Unsupported file type {file_type} on {filename}")
 
@@ -234,12 +238,24 @@ def media_manager():
     return template("media", files=[item for item in UPLOADED_PATH.iterdir() if item.is_file()])
 
 
+def convert_to_mp4(file_path: Path) -> Path:
+    with VideoFileClip(str(file_path)) as video_clip:
+        new_file_name = f"{file_path.stem}.mp4"
+        video_clip.write_videofile(str(UPLOADED_PATH / new_file_name))
+        return UPLOADED_PATH / new_file_name
+
+
 @post('/media/upload')
 def upload_media():
     upload = request.files.get('upload')
     file_path = UPLOADED_PATH / upload.filename
     upload.save(str(file_path))
-    create_thumbnail(upload.filename)
+    file_type = mimetypes.guess_type(file_path)[0]
+    if "video" in file_type and file_type != "video/mp4":
+        new_file_path = convert_to_mp4(file_path)
+        file_path.unlink()
+        file_path = new_file_path
+    create_thumbnail(file_path.name)
     redirect("/media")
 
 
