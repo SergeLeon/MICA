@@ -1,5 +1,5 @@
-import math
 from wsgiref.simple_server import make_server, WSGIRequestHandler
+from multiprocessing import cpu_count
 from threading import Thread
 from pathlib import Path
 import socket
@@ -212,7 +212,8 @@ def create_thumbnail(filename):
             if new_duration > 0:
                 video_clip = video_clip.speedx(new_duration)
             if video_clip.w > THUMBNAIL_SIZE[0] or video_clip.h > THUMBNAIL_SIZE[1]:
-                new_size = get_thumbnail_size((video_clip.h, video_clip.w) if video_clip.rotation else (video_clip.w, video_clip.h))
+                new_size = get_thumbnail_size(
+                    (video_clip.h, video_clip.w) if video_clip.rotation in [90, 270] else (video_clip.w, video_clip.h))
                 video_clip = video_clip.resize(new_size)
             video_clip.write_gif(str(UPLOADED_PATH / "thumbnail" / f"{str(filename).rsplit('.', 1)[0]}.gif"), fps=1)
     else:
@@ -241,7 +242,10 @@ def media_manager():
 def convert_to_mp4(file_path: Path) -> Path:
     with VideoFileClip(str(file_path)) as video_clip:
         new_file_name = f"{file_path.stem}.mp4"
-        video_clip.write_videofile(str(UPLOADED_PATH / new_file_name))
+        if video_clip.rotation in [90, 270]:
+            video_clip.rotation = 0
+            video_clip = video_clip.resize((video_clip.h, video_clip.w))
+        video_clip.write_videofile(str(UPLOADED_PATH / new_file_name), threads=cpu_count())
         return UPLOADED_PATH / new_file_name
 
 
