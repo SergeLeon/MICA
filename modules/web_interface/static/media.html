@@ -15,7 +15,8 @@
 
         <div class="list-group-item">
             <div class="input-group">
-                <input name="upload" accept="image/*, video/*" class="form-control" type="file" required autocomplete="off">
+                <input name="upload" accept="image/*, video/*" class="form-control" type="file" required
+                       autocomplete="off">
             </div>
         </div>
 
@@ -35,7 +36,13 @@
             <div class="col-sm-6 col-md-4 col-lg-3">
                 <figure>
                     <a onClick="fetch('media/show/{{file.name}}'); return false;" href="media/show/{{file.name}}">
-                        <img src="media/uploaded/thumbnail/{{file.name}}" alt="{{file.name}}" class="img-thumbnail grayscale">
+                        <img src="media/uploaded/thumbnail/{{file.name}}" alt="{{file.name}}"
+                             class="img-thumbnail grayscale">
+                    </a>
+                    <a class="btn btn-outline-danger btn-sm input-group" role="button"
+                       onClick="fetch('media/delete/{{file.name}}'); location.reload(); return false;"
+                       href="media/delete/{{file.name}}">
+                        Delete
                     </a>
                     <figcaption>{{file.name}}</figcaption>
                 </figure>

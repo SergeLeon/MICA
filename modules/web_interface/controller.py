@@ -255,7 +255,7 @@ def upload_media():
     file_path = UPLOADED_PATH / upload.filename
     upload.save(str(file_path))
     file_type = mimetypes.guess_type(file_path)[0]
-    if "video" in file_type and file_type != "video/mp4":
+    if file_type and "video" in file_type and file_type != "video/mp4":
         new_file_path = convert_to_mp4(file_path)
         file_path.unlink()
         file_path = new_file_path
@@ -269,6 +269,13 @@ def show_media(filename):
         "open_link",
         {"url": f"file:///{UPLOADED_PATH}/{filename}".replace("\\", "/")}
     )
+    redirect("/media")
+
+
+@route('/media/delete/<filename:path>')
+def delete_media(filename):
+    file_path = UPLOADED_PATH / filename
+    file_path.unlink()
     redirect("/media")
 
 
